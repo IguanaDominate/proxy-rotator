@@ -1,0 +1,1 @@
+"""Thin command handlers — orchestration only."""

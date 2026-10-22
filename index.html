@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>proxy-rotator — Proxy Generator for Scraping, Validation &amp; Rotation</title>
+<meta name="description" content="proxy-rotator is a Windows proxy generator for scraping, validating and rotating HTTP/SOCKS5 proxies — bulk checker, geo filter, live JSON/TXT export.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-0: #070a17;
+    --bg-1: #0c1130;
+    --bg-2: #141a3d;
+    --ink: #eef1ff;
+    --muted: #a2a9cc;
+    --muted-2: #7d84ab;
+    --accent: #6c8cff;
+    --accent-2: #a05cff;
+    --accent-3: #34e0c4;
+    --glass: rgba(20, 26, 61, 0.55);
+    --stroke: rgba(140, 156, 255, 0.16);
+    --radius: 16px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(108, 140, 255, 0.22), transparent 60%),
+      radial-gradient(1000px 600px at 90% 0%, rgba(160, 92, 255, 0.18), transparent 55%),
+      radial-gradient(900px 900px at 50% 110%, rgba(52, 224, 196, 0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    background: rgba(9, 13, 32, 0.62);
+    border-bottom: 1px solid var(--stroke);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    height: 68px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .brand-mark {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 18px rgba(108, 140, 255, 0.55);
+    font-size: 0.95rem;
+  }
+  .brand span { background: linear-gradient(90deg, #fff, #b9c4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .nav-links a { transition: color 0.2s ease; }
+  .nav-links a:hover { color: #fff; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    font-weight: 600;
+    font-size: 0.94rem;
+    border-radius: 11px;
+    padding: 11px 22px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #5d7dff, #a05cff);
+    color: #fff;
+    box-shadow: 0 8px 26px rgba(108, 140, 255, 0.38);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 34px rgba(140, 110, 255, 0.55);
+  }
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--stroke);
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(160, 176, 255, 0.42);
+    transform: translateY(-2px);
+  }
+  .nav .btn { padding: 9px 18px; font-size: 0.88rem; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    padding: 92px 0 78px;
+    text-align: center;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(700px 340px at 50% 0%, rgba(108, 140, 255, 0.20), transparent 70%);
+    pointer-events: none;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #c7d2ff;
+    background: rgba(108, 140, 255, 0.10);
+    border: 1px solid rgba(140, 160, 255, 0.32);
+    box-shadow: inset 0 0 22px rgba(108, 140, 255, 0.12);
+  }
+  .pill .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-3);
+    box-shadow: 0 0 10px var(--accent-3);
+    animation: pulse 2.2s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.82); }
+  }
+
+  .hero h1 {
+    margin: 26px auto 0;
+    max-width: 900px;
+    font-size: clamp(2.15rem, 5.4vw, 4rem);
+    line-height: 1.1;
+    letter-spacing: -1.2px;
+    font-weight: 800;
+    background: linear-gradient(100deg, #ffffff 8%, #b8c5ff 42%, #b177ff 68%, #6ee7d3 96%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p.lead {
+    margin: 24px auto 0;
+    max-width: 660px;
+    color: var(--muted);
+    font-size: clamp(1rem, 1.6vw, 1.12rem);
+  }
+  .hero-actions {
+    margin-top: 36px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .hero-actions .btn { padding: 14px 30px; font-size: 1rem; }
+
+  .stats {
+    margin-top: 52px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+  }
+  .stat {
+    min-width: 168px;
+    padding: 15px 22px;
+    border-radius: 14px;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+  }
+  .stat:hover { border-color: rgba(150, 170, 255, 0.4); transform: translateY(-3px); }
+  .stat b {
+    display: block;
+    font-size: 1.16rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.2px;
+  }
+  .stat small {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: var(--muted-2);
+  }
+
+  /* ---------- SECTION SHELL ---------- */
+  section { padding: 78px 0; position: relative; }
+  .sec-head { text-align: center; max-width: 640px; margin: 0 auto 46px; }
+  .sec-head .kicker {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .sec-head h2 {
+    margin-top: 10px;
+    font-size: clamp(1.65rem, 3.4vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    color: #fff;
+  }
+  .sec-head p { margin-top: 12px; color: var(--muted); font-size: 0.98rem; }
+
+  /* ---------- FEATURES ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    position: relative;
+    padding: 26px 24px 28px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(28, 35, 74, 0.72), rgba(14, 19, 45, 0.72));
+    border: 1px solid var(--stroke);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    opacity: 0.85;
+  }
+  .card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(150, 170, 255, 0.42);
+    box-shadow: 0 20px 46px rgba(6, 10, 30, 0.7), 0 0 0 1px rgba(120, 140, 255, 0.14);
+  }
+  .card .ico {
+    width: 46px; height: 46px;
+    display: grid; place-items: center;
+    font-size: 1.35rem;
+    border-radius: 12px;
+    background: rgba(108, 140, 255, 0.12);
+    border: 1px solid rgba(140, 160, 255, 0.24);
+    margin-bottom: 16px;
+  }
+  .card h3 { font-size: 1.04rem; font-weight: 700; color: #fff; letter-spacing: -0.2px; }
+  .card p { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: 68px;
+  }
+  .steps::before {
+    content: "";
+    position: absolute;
+    left: 27px;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2) 55%, var(--accent-3));
+    box-shadow: 0 0 18px rgba(108, 140, 255, 0.45);
+    opacity: 0.85;
+  }
+  .step { position: relative; padding: 0 0 40px; }
+  .step:last-child { padding-bottom: 0; }
+  .step .num {
+    position: absolute;
+    left: -68px;
+    top: -2px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+    background: linear-gradient(140deg, #1b2352, #2a2270);
+    border: 1px solid rgba(150, 170, 255, 0.4);
+    box-shadow: 0 0 0 6px rgba(9, 13, 32, 0.9), 0 0 26px rgba(108, 140, 255, 0.32);
+  }
+  .step h3 { font-size: 1.08rem; color: #fff; font-weight: 700; }
+  .step p { margin-top: 7px; color: var(--muted); font-size: 0.93rem; max-width: 560px; }
+
+  /* ---------- FAQ ---------- */
+  .faq { max-width: 780px; margin: 0 auto; display: grid; gap: 12px; }
+  details {
+    border-radius: 13px;
+    background: var(--glass);
+    border: 1px solid var(--stroke);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  details:hover { border-color: rgba(150, 170, 255, 0.36); }
+  details[open] {
+    border-color: rgba(150, 170, 255, 0.46);
+    background: rgba(28, 35, 74, 0.62);
+  }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    font-weight: 600;
+    font-size: 0.98rem;
+    color: #e8ecff;
+    user-select: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary .plus {
+    flex: 0 0 auto;
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    background: rgba(108, 140, 255, 0.12);
+    border: 1px solid rgba(140, 160, 255, 0.26);
+    transition: transform 0.3s ease, color 0.3s ease, background 0.3s ease;
+  }
+  details[open] summary .plus {
+    transform: rotate(45deg);
+    color: #ff8fb0;
+    background: rgba(255, 120, 160, 0.12);
+    border-color: rgba(255, 140, 175, 0.34);
+  }
+  details .answer {
+    padding: 0 22px 20px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    border-top: 1px solid rgba(140, 156, 255, 0.10);
+    padding-top: 15px;
+    margin: 0 22px 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-section { padding-top: 20px; }
+  .cta {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    padding: 62px 34px;
+    text-align: center;
+    background: linear-gradient(140deg, rgba(34, 42, 94, 0.92), rgba(18, 22, 54, 0.95));
+    border: 1px solid rgba(150, 170, 255, 0.28);
+    box-shadow: 0 28px 70px rgba(5, 8, 26, 0.65);
+  }
+  .cta::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(420px 300px at 50% 50%, rgba(108, 140, 255, 0.36), transparent 65%),
+                radial-gradient(360px 260px at 78% 22%, rgba(160, 92, 255, 0.30), transparent 68%),
+                radial-gradient(320px 240px at 20% 82%, rgba(52, 224, 196, 0.20), transparent 68%);
+    pointer-events: none;
+  }
+  .cta > * { position: relative; }
+  .cta h2 {
+    font-size: clamp(1.6rem, 3.6vw, 2.3rem);
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    color: #fff;
+  }
+  .cta p {
+    margin: 14px auto 0;
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 0.97rem;
+  }
+  .cta .hero-actions { margin-top: 30px; }
+  .cta small {
+    display: block;
+    margin-top: 20px;
+    font-size: 0.78rem;
+    color: var(--muted-2);
+    letter-spacing: 0.4px;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid var(--stroke);
+    margin-top: 40px;
+    padding: 30px 0 40px;
+    background: rgba(6, 9, 24, 0.55);
+  }
+  .foot-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 0.86rem;
+    color: var(--muted-2);
+  }
+  .foot-inner a { color: #c3cdff; transition: color 0.2s ease; }
+  .foot-inner a:hover { color: #fff; }
+  .foot-brand { display: flex; align-items: center; gap: 9px; color: var(--muted); font-weight: 600; }
+  .foot-brand .brand-mark { width: 24px; height: 24px; border-radius: 7px; font-size: 0.75rem; box-shadow: none; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 960px) {
+    .features { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .nav-inner { height: 62px; }
+    .hero { padding: 62px 0 56px; }
+    .hero-actions .btn { width: 100%; }
+    .stats { gap: 10px; }
+    .stat { flex: 1 1 44%; min-width: 0; padding: 13px 14px; }
+    .stat b { font-size: 1rem; }
+    .features { grid-template-columns: 1fr; }
+    section { padding: 56px 0; }
+    .steps { padding-left: 54px; }
+    .steps::before { left: 20px; }
+    .step .num { left: -54px; width: 44px; height: 44px; font-size: 0.95rem; }
+    .cta { padding: 46px 20px; border-radius: 18px; }
+    .foot-inner { justify-content: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">🔄</span>
+      <span>proxy-rotator</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary" href="https://gitscore.cc">Download</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <span class="pill"><span class="dot" aria-hidden="true"></span>Proxy Generator · Windows</span>
+      <h1 id="hero-title">Generate, Validate &amp; Rotate Proxies at Scale</h1>
+      <p class="lead">
+        proxy-rotator is a Windows proxy generator built for scraping workflows — pull fresh HTTP/SOCKS5
+        endpoints, run a bulk checker, filter by country, and export live JSON or TXT in one click.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://gitscore.cc">⬇ Download for Windows</a>
+        <a class="btn btn-ghost" href="https://gitscore.cc">★ View on GitHub</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>38,400+</b><small>Downloads</small></div>
+        <div class="stat"><b>v2.4.1</b><small>Latest release</small></div>
+        <div class="stat"><b>Windows 10 / 11</b><small>64-bit supported</small></div>
+        <div class="stat"><b>Free &amp; open source</b><small>MIT licensed</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Features</span>
+        <h2 id="features-title">Everything you need for a clean proxy pool</h2>
+        <p>From discovery to rotation — proxy-rotator handles the full lifecycle of your scraping proxies.</p>
+      </div>
+      <div class="features">
+        <article class="card">
+          <div class="ico" aria-hidden="true">🧭</div>
+          <h3>Multi-Protocol Generation</h3>
+          <p>Generate HTTP, HTTPS and SOCKS5 proxies from a single panel with configurable source lists and endpoint ranges.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">⚡</div>
+          <h3>Bulk Checker</h3>
+          <p>Validate thousands of proxies in parallel with adjustable timeouts, retries and concurrency to keep only working endpoints.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">🌍</div>
+          <h3>Geo Filter</h3>
+          <p>Filter results by country or region before rotation so your scrapers always route through the locations you target.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">🔄</div>
+          <h3>Smart Rotation</h3>
+          <p>Rotate proxies per request, per session or on a timer with automatic failover when an endpoint drops.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">📤</div>
+          <h3>Live JSON / TXT Export</h3>
+          <p>Push the active pool to JSON or TXT in real time — drop it straight into Scrapy, Puppeteer or your own stack.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">🖥️</div>
+          <h3>Native Windows App</h3>
+          <p>A lightweight desktop client for Windows 10 and 11 — no Docker, no dependencies, just launch the executable.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how" aria-labelledby="how-title">
+    <div class="

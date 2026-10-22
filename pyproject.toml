@@ -1,0 +1,13 @@
+[project]
+name = "proxy-rotator"
+version = "2.4.1"
+description = "Multi-source proxy generator and rotator for Windows desktop automation"
+requires-python = ">=3.10"
+authors = [{ name = "proxy-rotator maintainers" }]
+
+[project.scripts]
+proxy-rotator = "proxy_rotator.bootstrap.cli:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

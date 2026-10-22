@@ -1,0 +1,1 @@
+"""Platform and IO adapters."""
